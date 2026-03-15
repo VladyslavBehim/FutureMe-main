@@ -1,5 +1,5 @@
 import Foundation
 
 struct APIConfig {
-    static let apiKey = ""
+    static let apiKey = "Insert the API key here"
 }

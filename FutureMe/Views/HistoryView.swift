@@ -5,6 +5,8 @@ struct HistoryView: View {
     @State private var appearCards = false
     @State private var backgroundPulse = false
     @State private var selectedBranch: Branch?
+    @State private var branchToDelete: Branch?
+    @State private var showDeleteConfirmation = false
 
     var body: some View {
         ZStack {
@@ -64,6 +66,9 @@ struct HistoryView: View {
                             ForEach(Array(historyManager.history.enumerated()), id: \.element.id) { index, branch in
                                 HistoryCardView(branch: branch, index: index, appear: appearCards) {
                                     selectedBranch = branch
+                                } onDelete: {
+                                    branchToDelete = branch
+                                    showDeleteConfirmation = true
                                 }
                             }
                         }
@@ -84,6 +89,16 @@ struct HistoryView: View {
         .fullScreenCover(item: $selectedBranch) { branch in
             HistoryDetailWrapper(branch: branch)
         }
+        .alert("Delete Memory", isPresented: $showDeleteConfirmation, presenting: branchToDelete) { branch in
+            Button("Delete", role: .destructive) {
+                withAnimation {
+                    historyManager.deleteBranch(branch)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("Are you sure you want to delete this memory? This action cannot be undone.")
+        }
     }
 }
 
@@ -94,6 +109,7 @@ struct HistoryCardView: View {
     let index: Int
     let appear: Bool
     let action: () -> Void
+    let onDelete: () -> Void
     @State private var pressed = false
     @State private var hover = false
 
@@ -186,6 +202,20 @@ struct HistoryCardView: View {
             .shadow(color: Color(hex: "7B5EA7").opacity(0.05), radius: 8, y: 5)
         }
         .buttonStyle(HistoryCardButtonStyle())
+        .contextMenu {
+            Button(role: .destructive, action: onDelete) {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            Button(action: onDelete) {
+                Image(systemName: "trash")
+                    .font(.headline)
+                    .foregroundStyle(.red.opacity(0.8), .black.opacity(0.3))
+            }
+            .padding(12)
+            .buttonStyle(.plain)
+        }
         // Staggered Entrance
         .opacity(appear ? 1 : 0)
         .scaleEffect(appear ? 1 : 0.8)

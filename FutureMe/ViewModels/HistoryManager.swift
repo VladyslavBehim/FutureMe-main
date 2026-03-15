@@ -36,6 +36,10 @@ class HistoryManager: ObservableObject {
         }
     }
     
+    func deleteBranch(_ branch: Branch) {
+        history.removeAll(where: { $0.id == branch.id })
+    }
+    
     private func saveToDisk() {
         if let encoded = try? JSONEncoder().encode(history) {
             UserDefaults.standard.set(encoded, forKey: saveKey)
